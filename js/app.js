@@ -12,6 +12,7 @@
 //types a search phrase into the search box
 
 $(document).ready(function() {
+
     function createMap(center, zoom) {
         var mapElem = document.getElementById('map');
 
@@ -21,6 +22,12 @@ $(document).ready(function() {
         });
 
         var infoWindow = new google.maps.InfoWindow();
+
+        $(window).resize(function() {
+            $('#map').css('height', $(window).height() - $('#map').position().top - 20);
+        });
+
+        var markerImage = 'img/camera_icon.png';
 
         $.getJSON('http://data.seattle.gov/resource/65fc-btcc.json')
             .done(function(data) {
@@ -32,8 +39,12 @@ $(document).ready(function() {
                         },
 
                         map: map,
-                        animation: google.maps.Animation.DROP
+                        animation: google.maps.Animation.DROP,
+                        icon: markerImage
+                    });
 
+                    google.maps.event.addListener(map, 'click', function() {
+                        infoWindow.close();
                     });
 
                     google.maps.event.addListener(marker, 'click', function() {
@@ -42,9 +53,18 @@ $(document).ready(function() {
                         infoWindow.setContent(html);
                         infoWindow.open(map, this);
                         map.panTo(this.getPosition());
-                    })
+                    });
 
-
+                    $('#search').bind('search keyup', function() {
+                        var value = this.value.toLowerCase();
+                        var label = locations.cameralabel.toLowerCase();
+                        if (label.indexOf(value) == -1) {
+                            marker.setMap(null);
+                        }
+                        else {
+                            marker.setMap(map);
+                        }
+                    });
                 });
 
             }).fail(function(err) {
@@ -58,8 +78,4 @@ $(document).ready(function() {
     };
 
     createMap(seattleCoords, 12);
-
-    $('#search').bind('search keyup', function() {
-
-    });
 });
